@@ -1,19 +1,23 @@
 module tabfi::lend;
 
-use sui::table::{Self, Table};
 use sui::coin;
 use sui::event;
 use usd::usdv;
 use sui::clock::Clock;
+use sui::dynamic_field as df;
 // structs
-public struct Credit has key{
+public struct ModifyCap has key{
+  id: UID,
+}
+
+public struct Credit has key, store{
   id: UID,
   receiver: address,
   current: u64,
   max: u64,
 }
 
-public struct Lend has key{
+public struct Lend has key, store{
   id: UID,
   borrower: address,
   receiver: address,
@@ -24,8 +28,6 @@ public struct Lend has key{
 
 public struct Registry has key{
   id: UID,
-  table: Table<address, bool>,
-  owner: address
 }
 
 // events
@@ -42,40 +44,43 @@ public struct ModifyCreditEvent has copy, drop{
   curCredit: u64
 }
 
+public struct RepayEvent has copy, drop{
+  lendId: ID,
+  amount: u64,
+  timestamp: u64
+}
+
 // ErrorCodes
 const ENOT_REGISTERED: u64 = 1;
 const ENOT_ENOUGH_CREDIT: u64 = 2;
 // const ENOT_ENOUGH_BALANCE: u64 = 3;
 const ENOT_ENOUGH_TIME: u64 = 4;
 const ENOT_ENOUGH_AMOUNT: u64 = 5;
-const ENOT_ADMIN: u64 = 6;
 
-const Admin: address = @0xa0926a353d046319404621ff7a859a5a2cd0150ffe596781e51516526212b199;
+const MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
 // init
 fun init(ctx: &mut TxContext){
   let registry = Registry{
     id: object::new(ctx),
-    table: table::new<address, bool>(ctx),
-    owner: ctx.sender()
   };
   transfer::share_object(registry);
+  transfer::transfer(ModifyCap{id: object::new(ctx)}, ctx.sender());
 }
 // write functions
 // credit functions
-public fun getCredit(ctx: &mut TxContext, registry: &mut Registry){
-  assert!(!registry.table.contains(ctx.sender()), ENOT_REGISTERED);
+public fun get_new_credit(ctx: &mut TxContext, registry: &mut Registry){
+  assert!(!df::exists_(&registry.id, ctx.sender()), ENOT_REGISTERED);
   let credit = Credit{
     id: object::new(ctx),
     receiver: ctx.sender(),
     current: 0,
     max: 0
   };
-  registry.table.add(ctx.sender(), true);
-  transfer::share_object(credit);
+  df::add(&mut registry.id, ctx.sender(), credit);
 }
 
-public fun setCredit(ctx: &mut TxContext, newCredit: u64, curCredit: &mut Credit, registry: &mut Registry){
-    assert!(ctx.sender() == registry.owner, ENOT_ADMIN);
+public fun set_credit(_: &ModifyCap, newCredit: u64, target: address, registry: &mut Registry){
+    let curCredit: &mut Credit = df::borrow_mut(&mut registry.id, target);
     assert!(newCredit >= curCredit.current, ENOT_ENOUGH_CREDIT);
     let preCredit = curCredit.max;
     curCredit.max = newCredit;
@@ -87,56 +92,62 @@ public fun setCredit(ctx: &mut TxContext, newCredit: u64, curCredit: &mut Credit
 }
 
 // lend functions
-public fun lendToOthers(ctx: &mut TxContext, money: coin::Coin<usdv::USDV>, credit: &mut Credit,
-deadline: u64, clock: &Clock){
-  let Credit{id: _, receiver, current, max} = credit;
+public fun lend_to_others(ctx: &mut TxContext, money: coin::Coin<usdv::USDV>, target: address,
+deadline: u64, clock: &Clock, registry: &mut Registry):ID{
+  assert!(df::exists_(&registry.id, target), ENOT_REGISTERED);
+  let credit: &mut Credit = df::borrow_mut(&mut registry.id, target);
   let amount = coin::value(&money);
-  assert!(amount+*current <= *max, ENOT_ENOUGH_CREDIT);
-  assert!(clock.timestamp_ms() <= deadline, ENOT_ENOUGH_TIME);
+  assert!(amount+credit.current <= credit.max, ENOT_ENOUGH_CREDIT);
+  assert!(clock.timestamp_ms()+MONTH <= deadline, ENOT_ENOUGH_TIME);
   let lend = Lend{
     id: object::new(ctx),
     borrower: ctx.sender(),
-    receiver: *receiver,
+    receiver: target,
     amountToPay: amount,
     amountAlreadyPaid: 0,
     deadline: deadline
   };
-  credit.current = amount+*current;
-  transfer::public_transfer(money, *receiver);
-  transfer::share_object(lend);
+  credit.current = amount+credit.current;
+  transfer::public_transfer(money, target);
+  let lend_id = lend.id.to_inner();
+  df::add(&mut registry.id, lend_id, lend);
   event::emit(LendEvent{
     borrower: ctx.sender(),
-    receiver: *receiver,
+    receiver: target,
     amount: amount,
     deadline: deadline
   });
+  lend_id
 }
 
-public fun repay(money: coin::Coin<usdv::USDV>, 
-lend: &mut Lend, credit: &mut Credit, clock: &Clock){
-  let Lend{id:_, borrower, receiver:_, amountToPay, amountAlreadyPaid, deadline} = lend;
+public fun repay(money: coin::Coin<usdv::USDV>, lendId: ID, clock: &Clock, registry: &mut Registry){
   let amount = coin::value(&money);
-  assert!(amount+*amountAlreadyPaid <= *amountToPay, ENOT_ENOUGH_AMOUNT);
-  assert!(clock.timestamp_ms() <= *deadline, ENOT_ENOUGH_TIME);
-  lend.amountAlreadyPaid = amount+*amountAlreadyPaid;
+  let (borrower, receiver) = {
+    let lend: &mut Lend = df::borrow_mut(&mut registry.id, lendId);
+    assert!(amount+lend.amountAlreadyPaid <= lend.amountToPay, ENOT_ENOUGH_AMOUNT);
+    lend.amountAlreadyPaid = amount+lend.amountAlreadyPaid;
+    (lend.borrower, lend.receiver)
+  };
+  let credit: &mut Credit = df::borrow_mut(&mut registry.id, receiver);
   credit.current = credit.current-amount;
-  
-  transfer::public_transfer(money, *borrower);
+  transfer::public_transfer(money, borrower);
+  event::emit(RepayEvent{
+    lendId: lendId,
+    amount: amount,
+    timestamp: clock.timestamp_ms()
+  });
 }
 
 // read functions
-public fun getLendData(lend: &Lend): (address, address, u64, u64, u64){
-  let Lend{id:_, borrower, receiver, amountToPay, amountAlreadyPaid, deadline} = lend;
-  (*borrower, *receiver, *amountToPay, *amountAlreadyPaid, *deadline)
+public fun get_lend_data(id: ID, registry: &Registry): (address, address, u64, u64, u64){
+  let lend: &Lend = df::borrow(&registry.id, id);
+  (lend.borrower, lend.receiver, lend.amountToPay, lend.amountAlreadyPaid, lend.deadline)
 }
 
-public fun getCreditData(credit: &Credit): (address, u64, u64){
-  let Credit{id:_, receiver, current, max} = credit;
-  (*receiver, *current, *max)
-}
-
-public fun getRegisterData(ctx: &mut TxContext, registry: &mut Registry): bool{
-  registry.table.contains(ctx.sender())
+public fun get_credit_data(target: address, registry: &Registry): (address, u64, u64){
+  assert!(df::exists_(&registry.id, target), ENOT_REGISTERED);
+  let credit: &Credit = df::borrow(&registry.id, target);
+  (credit.receiver, credit.current, credit.max)
 }
 
 #[test_only]
@@ -145,16 +156,7 @@ public fun test_init(ctx: &mut TxContext){
 }
 
 #[test_only]
-public fun delete_lend(lend: Lend){
-  object::delete(lend.id);
-}
-
-#[test_only]
-public fun delete_credit(credit: Credit){
-  object::delete(credit.id);
-}
-
-#[test_only]
 public fun delete_registry(registry: Registry){
-  object::delete(registry.id);
+  let Registry{id} = registry;
+  object::delete(id);
 }
