@@ -7,6 +7,7 @@ use tabfi::lend as l;
 use usd::usdv::{Self, USDV};
 use sui::clock;
 use sui::dynamic_field as df;
+use sales::commodity as s;
 // Alice is the borrower, Bob is the receiver
 const Alice:address = @0x1;
 const Bob:address = @0x2;
@@ -17,6 +18,10 @@ const Editor:address = @0x3;
 //   let coin = coin::mint_for_testing<SUI>(100, ts.ctx());
 //   transfer::public_transfer(coin, target);
 // }
+#[test_only]
+public fun test_init_coin(ctx: &mut TxContext) {
+  s::init(ctx);
+}
 
 #[test]
 public fun test_lend() {
@@ -59,4 +64,18 @@ public fun test_lend() {
   clock::destroy_for_testing(clock_test);
   l::delete_registry(registry);
   s.end();
+}
+
+#[test]
+public fun test_commodity() {
+  s.next_tx(Editor);
+  l::test_init(s.ctx());
+  // init usdv
+  s.next_tx(Editor);
+  usdv::test_init(s.ctx());
+  // begin test
+  s.next_tx(Editor);
+  let mut treasury = s.take_from_sender<coin::TreasuryCap<USDV>>();
+  usdv::mint_to(&mut treasury, 1_000_000_000, Alice, s.ctx());
+  s.return_to_sender(treasury);
 }
