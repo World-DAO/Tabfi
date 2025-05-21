@@ -5,7 +5,7 @@ export default function HomePage() {
     <div className="grotesk max-w-8xl mx-auto">
       {/* Hero Section */}
       <section className="w-full text-black">
-        <div className="max-w-8xl mx-auto inline-block items-center p-3 pt-0 lg:flex lg:flex-wrap lg:pt-4 lg:my-10">
+        <div className="max-w-8xl mx-auto inline-block items-center p-3 pt-0 lg:flex lg:flex-wrap lg:pt-2 lg:my-10">
           <div className="lg:w-3/6">
             <h1 className="max-w-xl lg:text-[4.2em] text-3xl font-bold leading-none text-black inline-block">
               Tabfi -
@@ -20,7 +20,7 @@ export default function HomePage() {
               experience.
             </p>
           </div>
-          <div className="mb-10 mt-10 hidden w-full flex-col lg:mt-12 lg:inline-block lg:w-3/6">
+          <div className="mb-10 mt-10 hidden w-full flex-col lg:mt-2 lg:inline-block lg:w-3/6">
             <Image
               src="/images/home.png"
               width={2048}
@@ -61,7 +61,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-center justify-center">
                   <Image
-                    src="/images/EverMove.jpg"
+                    src="/images/overflow.png"
                     alt="EverMove"
                     width={160}
                     height={160}
@@ -94,7 +94,7 @@ export default function HomePage() {
           <div className="text-black">
             <div className="max-w-9xl mx-auto flex flex-col items-center justify-center px-5">
               {/* New Payment Model */}
-              <div className="mr-0 mb-6 w-full py-4 text-center lg:w-2/3">
+              <div className="mr-0 mb-6 w-full py-4 text-center lg:w-3/4">
                 <div>
                   <h2 className="mb-4 text-4xl font-bold sm:text-5xl">
                     New Payment Model
@@ -113,15 +113,15 @@ export default function HomePage() {
                   <Image
                     src="/images/Work Flow.png"
                     alt="New Payment Model"
-                    width={2513}
+                    width={2640}
                     height={1238}
-                    className="home-intro-image"
+                    className="home-intro-image w-full h-auto"
                   />
                 </div>
               </div>
 
               {/* Merchant Credit Evaluation System */}
-              <div className="mr-0 mb-6 w-full py-4 text-center lg:w-2/3">
+              <div className="mr-0 mb-6 w-full py-4 text-center lg:w-3/4">
                 <div>
                   <h2 className="mb-4 text-4xl font-bold sm:text-5xl">
                     Merchant Credit Evaluation System

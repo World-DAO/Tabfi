@@ -1,14 +1,15 @@
 "use client";
 
-import { useAccounts } from "@mysten/dapp-kit";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast"; // 引入 Toast 组件
+import { useGetCredit } from "@/components/hook/useGetCredit";
 
 export default function FaucetPage() {
-  const accounts = useAccounts();
+  const account = useCurrentAccount();
   const [result, setResult] = useState<string | null>(null);
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const { getCredit, digest, isLoading, error } = useGetCredit();
 
   const toggleFAQ = (index: number) => {
     setOpenFAQ(openFAQ === index ? null : index);
@@ -19,15 +20,15 @@ export default function FaucetPage() {
       toast.error("Please connect your wallet.");
       return;
     }
-    setIsLoading(true);
     setResult("Processing, please wait...");
     try {
-
+      await getCredit();
       // if you want to wait for transaction
+      
     } catch (error) {
       console.error(error);
+      setResult("Failed to register, please try again.");
     } finally {
-      setIsLoading(false);
       setResult("Successfully registered!");
     }
   };
@@ -39,7 +40,6 @@ export default function FaucetPage() {
       <div className="bg-white lg:p-8 rounded-lg">
         <h2 className="text-3xl font-bold">Register as a Merchant</h2>
         <p className="mt-2 text-gray-600">Become a merchant for free.</p>
-
         {/* Input Address */}
         <div className="mt-4">
           <label className="block text-gray-700 text-sm font-semibold mb-2">

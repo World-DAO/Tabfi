@@ -68,7 +68,7 @@ fun init(ctx: &mut TxContext){
 }
 // write functions
 // credit functions
-public fun get_new_credit(ctx: &mut TxContext, registry: &mut Registry){
+public entry fun get_new_credit(registry: &mut Registry, ctx: &mut TxContext){
   assert!(!df::exists_(&registry.id, ctx.sender()), ENOT_REGISTERED);
   let credit = Credit{
     id: object::new(ctx),
@@ -92,8 +92,8 @@ public fun set_credit(_: &ModifyCap, newCredit: u64, target: address, registry: 
 }
 
 // lend functions
-public fun lend_to_others(ctx: &mut TxContext, money: coin::Coin<usdv::USDV>, target: address,
-deadline: u64, clock: &Clock, registry: &mut Registry):ID{
+public entry fun lend_to_others(money: coin::Coin<usdv::USDV>, target: address,
+deadline: u64, clock: &Clock, registry: &mut Registry, ctx: &mut TxContext):ID{
   assert!(df::exists_(&registry.id, target), ENOT_REGISTERED);
   let credit: &mut Credit = df::borrow_mut(&mut registry.id, target);
   let amount = coin::value(&money);

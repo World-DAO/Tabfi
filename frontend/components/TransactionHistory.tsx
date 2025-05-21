@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import use
 import toast from "react-hot-toast";
 import { getPayTime } from "@/lib/utils";
 import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";

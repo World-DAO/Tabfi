@@ -29,8 +29,8 @@ fun init(ctx: &mut TxContext) {
   transfer::share_object(Shop { id: object::new(ctx), owner: ctx.sender() });
 }
 
-public fun create_commodity(ctx: &mut TxContext, _: &CommodityCap, name: String, 
-price: u64, description: String, image: String, shop: &mut Shop) {
+public entry fun create_commodity(_: &CommodityCap, name: String, 
+price: u64, description: String, image: String, shop: &mut Shop, ctx: &mut TxContext) {
   let uid = object::new(ctx);
   let id = uid.to_inner();
   let commodity = Commodity {
@@ -50,8 +50,8 @@ public fun remove_commodity(_: &CommodityCap, id: ID, shop: &mut Shop) {
   object::delete(uid);
 }
 
-public fun buy_commodity(ctx: &mut TxContext, money: Coin<usdv::USDV>, shop: &mut Shop,
-id: ID, registry: &mut Registry, deadline: u64, clock: &Clock) {
+public entry fun buy_commodity(money: Coin<usdv::USDV>, shop: &mut Shop,
+id: ID, registry: &mut Registry, deadline: u64, clock: &Clock, ctx: &mut TxContext) {
   assert!(df::exists_(&shop.id, id), 0);
   let commodity = df::borrow_mut<ID, Commodity>(&mut shop.id, id);
   transfer::public_transfer(Commodity{
@@ -61,5 +61,5 @@ id: ID, registry: &mut Registry, deadline: u64, clock: &Clock) {
     description: commodity.description,
     image: commodity.image,
   }, shop.owner);
-  let _ = lend::lend_to_others(ctx, money, shop.owner, deadline, clock, registry);
+  let _ = lend::lend_to_others(money, shop.owner, deadline, clock, registry, ctx);
 }

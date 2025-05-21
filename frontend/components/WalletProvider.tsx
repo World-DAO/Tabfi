@@ -8,14 +8,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 const { networkConfig } = createNetworkConfig({
 	localnet: { url: getFullnodeUrl('localnet') },
 	mainnet: { url: getFullnodeUrl('mainnet') },
+	testnet: { url: getFullnodeUrl('testnet') },
 });
 const queryClient = new QueryClient();
 
-export function SuiProvider({ children }: PropsWithChildren) {
+export function SuiProvider({ children }: { children: React.ReactNode }) {
 //   const { toast } = useToast()
   return (
     <QueryClientProvider client={queryClient}>
-			<SuiClientProvider networks={networkConfig} defaultNetwork="localnet">
+			<SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
 				<WalletProvider>
 					{children}
 				</WalletProvider>
