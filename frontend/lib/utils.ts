@@ -49,3 +49,18 @@ export const getPayTime = (month: number, currentTime: string) => {
     return `${month} 个月后`;
   }
 }
+
+export const getMap = (data: any)=>{
+  const addressValueMap = new Map<string, string>();
+  data.forEach((item: any) => {
+    const address = item.name.json.addr;
+    const value = item.value.json;
+    addressValueMap.set(address, value);
+  });
+  
+  return addressValueMap;
+}
+
+export const getBCS = (data: any)=>{
+  
+}

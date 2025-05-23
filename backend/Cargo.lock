@@ -146,6 +146,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "db"
+version = "0.1.0"
+
+[[package]]
 name = "deranged"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1042,6 +1046,10 @@ checksum = "87607cb1398ed59d48732e575a4c28a7a8ebf2454b964fe3f224f2afc07909e1"
 dependencies = [
  "serde",
 ]
+
+[[package]]
+name = "service"
+version = "0.1.0"
 
 [[package]]
 name = "sharded-slab"

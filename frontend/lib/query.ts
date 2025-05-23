@@ -1,6 +1,7 @@
 import { graphql } from '@mysten/sui/graphql/schemas/latest';
+import { SuiGraphQLClient } from '@mysten/sui/graphql';
 
-const query = graphql(`
+export const queryDynamicFields = graphql(`
   query ($id: SuiAddress!) {
     owner(address: $id) {
       dynamicFields {
@@ -33,3 +34,7 @@ const query = graphql(`
     }
   }
 `);
+
+export const gqlClient = new SuiGraphQLClient({
+	url: 'https://sui-testnet.mystenlabs.com/graphql',
+});

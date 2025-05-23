@@ -5,5 +5,7 @@ export const SHOP_ID = "0x3db815577095e1f6a6cb67457b588a40939f9fba76db4290e390cf
 export const MODIFY_CAP_ID = "0xdbd25d7740e84fe5d7109d8261b4a2785ea11233e407dfc3c576ae309189ff40"
 export const COMMODITY_CAP_ID = "0xb065fca7cdc436d666299e9012c329eb92a48ec063f0a4e7554eeb2ccbe63845"
 
+export const CREDIT_ID = ""
+
 export const CLOCK_ID = "0x6"
 export const RPC_URL = "https://sui-testnet.mystenlabs.com/graphql"
