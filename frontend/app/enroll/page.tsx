@@ -29,7 +29,6 @@ export default function FaucetPage() {
       console.error(error);
       setResult("Failed to register, please try again.");
     } finally {
-      setResult("Successfully registered!");
     }
   };
 

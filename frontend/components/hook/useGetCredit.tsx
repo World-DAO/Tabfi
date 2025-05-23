@@ -3,6 +3,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { TIME_PACKAGE_ID, TIME_REG } from "@/data/SuiConfig";
+import toast from "react-hot-toast";
 
 interface PublishResult {
     digest: string;
@@ -40,6 +41,7 @@ export const useGetCredit = () => {
             isLoading: false,
             error: null,
           });
+          toast.success("Successfully registered!");
         },
         onError: (error) => {
           setResult({
