@@ -20,7 +20,7 @@ export default function FaucetPage() {
       toast.error("Please connect your wallet.");
       return;
     }
-    setResult("Processing, please wait...");
+    // setResult("Processing, please wait...");
     try {
       await getCredit();
       // if you want to wait for transaction
