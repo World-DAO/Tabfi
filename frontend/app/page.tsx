@@ -52,7 +52,7 @@ export default function HomePage() {
               <div className="grid grid-cols-3 gap-16">
                 <div className="flex items-center justify-center">
                   <Image
-                    src="/images/Tabfi_logo.jpg"
+                    src="/images/logo.png"
                     width={160}
                     height={160}
                     alt="Logo"

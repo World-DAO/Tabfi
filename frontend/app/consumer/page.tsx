@@ -4,10 +4,12 @@ import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { getTime } from "@/lib/utils";
 import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import { useLend } from "@/components/hook/useLend";
+import { COFFEE_ADDRESS } from "@/data/SuiConfig";
 
 export default function CoffeePage() {
   const account = useCurrentAccount();
-  const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+  const { lend, digest, error } = useLend();
 
   // Coffee list with image paths added
   const coffeeList = [
@@ -146,12 +148,10 @@ export default function CoffeePage() {
         typeof amountParam === "string"
           ? parseFloat(amountParam.toString()) * 10 ** 6
           : amountParam*10**6;
-      // const response = await sendLoan(CoffeeAddress, amount, Number(repayTimeParam));
-      toast.success("Payment Success!");
+      const response = await sendLoan(COFFEE_ADDRESS, amount, Number(repayTimeParam));
       // here post history in the json server.
-    
+      
     } catch (error) {
-      toast.error("Contract call failed.");
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -165,13 +165,12 @@ export default function CoffeePage() {
     }
     const time = getTime(month);
     // lend
-
     try {
-
+      const response = await lend(account.address, seller, time, amount);
+      return response;
     } catch (error) {
       console.error(error);
     }
-    return response;
   };
   return (
     <div className="max-w-8xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 px-6 lg:py-8">

@@ -1,5 +1,10 @@
+// @ts-nocheck
+import { bcs } from "@mysten/sui/bcs";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { gqlClient } from "./query";
+import { queryCoin } from "./query";
+import { TIME_PACKAGE_ID } from "@/data/SuiConfig";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -15,7 +20,16 @@ export const getTime = (month: number) => {
     currentDate.getMinutes(),
     currentDate.getSeconds()
   );
-  return Math.floor(futureDate.getTime() / 1000);
+  return Math.floor(futureDate.getTime());
+}
+
+export const getPayMonth = (time: number) => {
+  const currentDate = new Date();
+  const futureDate = new Date(time);
+  const yearDiff = futureDate.getFullYear() - currentDate.getFullYear();
+  const monthDiff = futureDate.getMonth() - currentDate.getMonth();
+  
+  return yearDiff * 12 + monthDiff;
 }
 
 export const getPayTime = (month: number, currentTime: string) => {
@@ -61,6 +75,19 @@ export const getMap = (data: any)=>{
   return addressValueMap;
 }
 
-export const getBCS = (data: any)=>{
-  
+export const getAddressBCS = (address: string)=>{
+  const add = bcs.Address.serialize(address).toBytes();
+  const base = Buffer.from(add).toString('base64');
+  return base;
+}
+
+export const getAllCoins = async (address: string)=>{
+  const coins = await gqlClient.query({
+    query: queryCoin,
+    variables: {
+      address: address,
+      coinType: `${TIME_PACKAGE_ID}::usdv::USDV`
+    }
+  })
+  return coins.data?.address.coins.nodes;
 }
